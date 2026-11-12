@@ -1,0 +1,15 @@
+services:
+  postgres_oltp:
+    image: postgres:15
+    container_name: dot_legacy_postgres
+    environment:
+      POSTGRES_USER: dot_admin
+      POSTGRES_PASSWORD: dot_password
+      POSTGRES_DB: dot_operations
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:

@@ -1,0 +1,22 @@
+version: 2
+
+models:
+  - name: dim_assets
+    columns:
+      - name: asset_id
+        tests:
+          - unique
+          - not_null
+
+  - name: fct_maintenance
+    columns:
+      - name: log_id
+        tests:
+          - unique
+          - not_null
+      - name: asset_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_assets')
+              field: asset_id

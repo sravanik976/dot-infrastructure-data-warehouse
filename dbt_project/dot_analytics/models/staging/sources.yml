@@ -1,0 +1,10 @@
+version: 2
+
+sources:
+  - name: dot_raw
+    database: DOT_DW
+    schema: RAW
+    tables:
+      - name: regions
+      - name: assets
+      - name: maintenance_logs
