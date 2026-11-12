@@ -1,0 +1,55 @@
+-- Snowflake Data Warehouse Setup & S3 Parquet Ingestion
+-- Note: Replace <YOUR_S3_BUCKET> and <YOUR_AWS_CREDENTIALS> before executing.
+
+-- 1. Provision Database and Schemas
+CREATE DATABASE IF NOT EXISTS DOT_DW;
+CREATE SCHEMA IF NOT EXISTS DOT_DW.RAW;
+CREATE SCHEMA IF NOT EXISTS DOT_DW.ANALYTICS;
+
+-- 2. Define Parquet File Format & External S3 Stage
+CREATE OR REPLACE FILE FORMAT DOT_DW.RAW.PARQUET_FORMAT 
+  TYPE = 'PARQUET';
+
+CREATE OR REPLACE STAGE DOT_DW.RAW.S3_DOT_STAGE
+  URL = 's3://<YOUR_S3_BUCKET>/raw/'
+  CREDENTIALS = (
+    AWS_KEY_ID = '<YOUR_AWS_ACCESS_KEY_ID>'
+    AWS_SECRET_KEY = '<YOUR_AWS_SECRET_ACCESS_KEY>'
+  )
+  FILE_FORMAT = DOT_DW.RAW.PARQUET_FORMAT;
+
+-- 3. Create Target Raw Tables
+CREATE OR REPLACE TABLE DOT_DW.RAW.REGIONS (
+    region_id INT,
+    region_name STRING,
+    state_code STRING
+);
+
+CREATE OR REPLACE TABLE DOT_DW.RAW.ASSETS (
+    asset_id INT,
+    asset_type STRING,
+    region_id INT,
+    install_date DATE,
+    condition_rating INT
+);
+
+CREATE OR REPLACE TABLE DOT_DW.RAW.MAINTENANCE_LOGS (
+    log_id INT,
+    asset_id INT,
+    work_type STRING,
+    cost FLOAT,
+    completed_at TIMESTAMP
+);
+
+-- 4. Bulk Load Parquet Files from S3 into Raw Layer
+COPY INTO DOT_DW.RAW.REGIONS 
+  FROM @DOT_DW.RAW.S3_DOT_STAGE/regions/ 
+  MATCH_BY_COLUMN_NAME = CASE_INSENSITIVE;
+
+COPY INTO DOT_DW.RAW.ASSETS 
+  FROM @DOT_DW.RAW.S3_DOT_STAGE/assets/ 
+  MATCH_BY_COLUMN_NAME = CASE_INSENSITIVE;
+
+COPY INTO DOT_DW.RAW.MAINTENANCE_LOGS 
+  FROM @DOT_DW.RAW.S3_DOT_STAGE/maintenance_logs/ 
+  MATCH_BY_COLUMN_NAME = CASE_INSENSITIVE;
